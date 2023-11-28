@@ -15,13 +15,15 @@ def ave(
     Nstart: int = 0,
     Nend: Optional[int] = None,
 ):
-    assert Nrepeat * Nevery < Nfreq, "Nrepeat*Nevery must be less than Nfreq"
+    axis = 0
+    assert Nrepeat * Nevery <= Nfreq, "Nrepeat*Nevery must be less than Nfreq"
 
     x = np.array(x)[Nstart:Nend]
-    x = x[len(x) % Nfreq :]
-    x = x.reshape(-1, Nfreq)
-    x = x[..., len(x) - Nevery * Nrepeat - 1 : None : Nevery]
-    assert x.shape[-1] == Nrepeat, "x.shape[-1] must be equal to Nrepeat, or it;s a bug"
-    x = x.mean(axis=1)
-
-    return x
+    x = x[len(x) % Nfreq :]  # to make len(x) % Nfreq == 0
+    x = x.reshape(-1, Nfreq, *x.shape[1:])
+    x = x[:, :x.shape[axis+1]-Nevery*Nrepeat-1:-Nevery, ...]
+    x = x[:, ::-1, ...]
+    x = x.reshape(-1, *x.shape[axis+1:])
+    x = x.mean(axis=axis)
+    return x.squeeze()
+    
